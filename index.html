@@ -4,25 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PDF 플립북 플랫폼</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
-  
-  <!-- PDF.js 라이브러리 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  
-  <!-- React 라이브러리 -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  
-  <!-- Babel (JSX 변환) -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <!-- React (개발 버전으로 변경하면 에러 확인 가능) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div id="root"></div>
   
-  <!-- React 앱 코드 -->
-  <script type="text/babel" src="app.js"></script>
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- 앱 코드 -->
+  <script type="text/babel">
+    // app.js의 전체 내용을 여기에 직접 붙여넣기
+    const { useState, useRef, useEffect } = React;
+    const { Upload, ChevronLeft, ChevronRight, Download, Trash2, BookOpen, Plus, List } = lucide;
+
+    function PDFFlipbookPlatform() {
+      // ... 전체 코드 ...
+    }
+
+    const { createRoot } = ReactDOM;
+    const root = createRoot(document.getElementById('root'));
+    root.render(<PDFFlipbookPlatform />);
+  </script>
 </body>
 </html>
