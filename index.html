@@ -3,33 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ultimate Flipbook Pro v95.0</title>
+    <title>Ultimate Flipbook Maker Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
     <style>
-        :root { --accent: #00f260; --bg: #000; }
-        body { margin: 0; background: var(--bg); color: #fff; font-family: sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; touch-action: none; }
+        :root { --accent: #00f260; --bg: #0a0a0b; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
         
-        /* [1] Maker UI - 업로드 화면 */
-        #maker-ui { position: fixed; inset: 0; background: #fff; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; padding: 20px; text-align: center; }
-        .drop-zone { border: 3px dashed #ddd; padding: 50px 20px; border-radius: 20px; cursor: pointer; width: 100%; max-width: 350px; background: #f8fafc; }
-        .btn-build { display: none; background: var(--accent); color: #000; padding: 18px 50px; border-radius: 50px; font-weight: 800; cursor: pointer; border: none; font-size: 18px; margin-top: 20px; box-shadow: 0 10px 20px rgba(0,242,96,0.3); }
+        /* 메이커 UI (파일 선택 전) */
+        #maker-ui { position: fixed; inset: 0; background: #fff; color: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; padding: 20px; text-align: center; }
+        .drop-zone { border: 3px dashed #ddd; padding: 50px 20px; border-radius: 20px; width: 100%; max-width: 380px; background: #f9fafb; cursor: pointer; transition: 0.3s; }
+        .drop-zone:hover { border-color: var(--accent); background: #f0fff4; }
+        .btn-build { display: none; background: var(--accent); color: #000; padding: 18px 50px; border-radius: 50px; font-weight: 800; cursor: pointer; border: none; font-size: 18px; margin-top: 25px; box-shadow: 0 10px 20px rgba(0,242,96,0.3); }
 
-        /* [2] Viewer Area - 100% 화면 활용 */
-        #v { flex: 1; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; overflow: hidden; position: relative; }
-        #fb-box { transition: transform 0.15s ease-out; display: flex; align-items: center; justify-content: center; will-change: transform; }
-        .pw { background: #fff; box-shadow: 0 0 60px rgba(0,0,0,1); overflow: hidden; }
+        /* 뷰어 영역 (책이 보이는 곳) */
+        #v { flex: 1; display: none; align-items: center; justify-content: center; position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        #fb-box { transition: transform 0.1s ease-out; display: flex; align-items: center; justify-content: center; will-change: transform; }
+        .pw { background: #fff; box-shadow: 0 0 50px rgba(0,0,0,1); overflow: hidden; }
         canvas { width: 100% !important; height: 100% !important; display: block; }
 
-        /* [3] Floating HUD - 책 위에 뜨는 전문가용 바 */
-        #h-ui { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 600px; background: rgba(15, 15, 20, 0.92); backdrop-filter: blur(25px); border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; z-index: 1000; box-shadow: 0 15px 40px rgba(0,0,0,0.9); }
-        .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-        .btn-icon { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; padding: 10px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-        .btn-icon:active { color: var(--accent); transform: scale(0.85); }
-        #sld { flex: 1; accent-color: var(--accent); cursor: pointer; height: 4px; }
+        /* 전문가용 부유형 툴바 (Overlay HUD) */
+        #h-ui { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 550px; background: rgba(20,20,25,0.92); backdrop-filter: blur(15px); border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); padding: 12px 20px; z-index: 1000; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+        .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .btn-icon { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 10px; transition: 0.2s; border-radius: 50%; }
+        .btn-icon:active { color: var(--accent); background: rgba(255,255,255,0.1); }
+        #sld { flex: 1; accent-color: var(--accent); height: 4px; cursor: pointer; }
         #n { min-width: 65px; text-align: center; font-weight: 800; color: var(--accent); font-size: 13px; font-variant-numeric: tabular-nums; }
         
+        /* 로딩 화면 */
         #ld { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9000; }
         .spin { border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: s 1s linear infinite; margin-bottom: 20px; }
         @keyframes s { to { transform: rotate(360deg); } }
@@ -38,32 +40,35 @@
 <body>
 
 <div id="maker-ui">
-    <h1 style="margin:0 0 10px 0;">Ultimate Pro Maker</h1>
-    <p style="color:#666; margin-bottom:30px;">콘솔 오류 해결 & 화면 가득 찬 버전 (v95.0)</p>
+    <h1 style="margin:0 0 10px 0;">Pro Flipbook Maker</h1>
+    <p style="color:#666; margin-bottom:30px;">404 에러 방지 및 화면 극대화 아키텍처</p>
     <div class="drop-zone" id="drop-area">
         <div id="file-name">PDF 파일을 드래그하거나 선택하세요</div>
         <input type="file" id="pdf-input" accept="application/pdf" style="display:none;">
     </div>
-    <button class="btn-build" id="build-btn">💾 오류 수정 플립북 생성</button>
+    <button class="btn-build" id="build-btn">💾 완벽한 독립 파일 생성</button>
+    <div id="log" style="margin-top:20px; font-size:12px; color:#999;"></div>
 </div>
 
-<div id="ld"><div class="spin"></div>고해상도 엔진 가동 중...</div>
-<div id="v" ondblclick="app.dbz(event)"><div id="fb-box"><div id="fb"></div></div></div>
+<div id="ld"><div class="spin"></div>엔진 최적화 로드 중...</div>
+
+<div id="v" ondblclick="app.dbz(event)">
+    <div id="fb-box"><div id="fb"></div></div>
+</div>
 
 <div id="h-ui">
     <div class="row">
-        <button class="btn-icon" onclick="alert('목록 기능 준비 중')"><i class="fas fa-th-large"></i></button>
         <button class="btn-icon" onclick="app.p()"><i class="fas fa-chevron-left"></i></button>
         <button class="btn-icon" id="play-btn" onclick="app.af()"><i class="fas fa-play"></i></button>
         <input type="range" id="sld" min="1" value="1" oninput="app.j(this.value)">
         <span id="n">1 / -</span>
+        <button class="btn-icon" onclick="app.rs()"><i class="fas fa-compress"></i></button>
         <button class="btn-icon" onclick="app.n()"><i class="fas fa-chevron-right"></i></button>
-        <button class="btn-icon" onclick="app.rs()"><i class="fas fa-compress-arrows-alt"></i></button>
-        <button class="btn-icon" onclick="alert('검색 기능 준비 중')"><i class="fas fa-search"></i></button>
     </div>
 </div>
 
 <script>
+    // 20년 차 개발자의 Maker 로직 (JS 파일 독립성 확보)
     const Maker = {
         file: null,
         init() {
@@ -82,22 +87,29 @@
             document.getElementById('build-btn').style.display = 'block';
         },
         async build() {
+            const log = document.getElementById('log');
+            log.innerText = "데이터 인코딩 중...";
             const buffer = await this.file.arrayBuffer();
             const bytes = new Uint8Array(buffer);
             let binary = "";
             for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
             const b64 = btoa(binary);
+
+            log.innerText = "자기 완결형 파일 조립 중...";
+            // 하단 바 가시성과 책 크기 최적화를 위해 CSS와 ID를 동적으로 교체
             const html = document.documentElement.outerHTML
                 .replace('id="h-ui"', 'id="h-ui" style="display:block;"')
                 .replace('id="v"', 'id="v" style="display:flex;"')
                 .replace('id="maker-ui"', 'id="maker-ui" style="display:none;"')
-                + `<script id="d" type="text/plain">${b64}<\/script>` + this.getLogic();
+                + `<script id="d" type="text/plain">${b64}<\/script>` + this.getStandaloneLogic();
+            
             const blob = new Blob(['<!DOCTYPE html><html>' + html + '<\/html>'], {type: 'text/html'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = this.file.name.replace('.pdf', '') + "_fixed.html"; a.click();
+            a.download = this.file.name.replace('.pdf', '') + "_final.html"; a.click();
+            log.innerText = "생성 완료! 파일을 저장하세요.";
         },
-        getLogic() {
-            return '<script>const app={pdf:null,flip:null,map:[],zoom:1,pX:0,pY:0,play:!1,timer:null,async i(){try{document.getElementById("ld").style.display="flex";const d=document.getElementById("d").innerText;const bin=atob(d);const by=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)by[i]=bin.charCodeAt(i);pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";this.pdf=await pdfjsLib.getDocument({data:by}).promise;await this.bm();this.s();this.it();window.addEventListener("resize",()=>this.s());document.getElementById("ld").style.display="none";}catch(e){alert(e);}},async bm(){for(let i=1;i<=this.pdf.numPages;i++){const pg=await this.pdf.getPage(i);const vp=pg.getViewport({scale:1});if(vp.width>vp.height*1.1){this.map.push({idx:i,t:"L"});this.map.push({idx:i,t:"R"});}else{this.map.push({idx:i,t:"F"});}}},s(){const f=document.getElementById("fb");const vW=window.innerWidth;const vH=window.innerHeight;const isP=vW<vH;let bW,bH;if(isP){bW=vW;bH=bW*1.414;if(bH>vH){bH=vH;bW=bH/1.414;}}else{bH=vH;bW=(bH/1.414)*2;if(bW>vW){bW=vW;bH=(bW/2)*1.414;}}f.style.width=Math.floor(bW)+"px";f.style.height=Math.floor(bH)+"px";const cp=this.flip?this.flip.getCurrentPageIndex():0;f.innerHTML="";this.map.forEach((m,i)=>{const d=document.createElement("div");d.className="pw";d.innerHTML=\'<div id="g-\'+i+\'" style="width:100%;height:100%"><\/div>\';f.appendChild(d);});if(this.flip)this.flip.destroy();this.flip=new St.PageFlip(f,{width:isP?Math.floor(bW):Math.floor(bW/2),height:Math.floor(bH),size:"stretch",showCover:true,usePortrait:isP,startPage:cp});this.flip.loadFromHTML(document.querySelectorAll(".pw"));document.getElementById("sld").max=this.map.length;this.uN(cp);this.flip.on("flip",(e)=>{this.uN(e.data);this.r(e.data);});this.r(cp);},uN(i){document.getElementById("n").innerText=(i+1)+" / "+this.map.length;document.getElementById("sld").value=i+1;},async r(idx){for(let i=idx-1;i<=idx+1;i++){if(i<0||i>=this.map.length)continue;const t=document.getElementById("g-"+i);if(t.hasChildNodes())continue;const m=this.map[i];const p=await this.pdf.getPage(m.idx);const vp=p.getViewport({scale:4});const c=document.createElement("canvas");const ctx=c.getContext("2d");if(m.t==="F"){c.width=vp.width;c.height=vp.height;await p.render({canvasContext:ctx,viewport:vp}).promise;}else{c.width=vp.width/2;c.height=vp.height;const tc=document.createElement("canvas");tc.width=vp.width;tc.height=vp.height;await p.render({canvasContext:tc.getContext("2d"),viewport:vp}).promise;ctx.drawImage(tc,m.t==="L"?0:-vp.width/2,0);}t.appendChild(c);}},it(){const v=document.getElementById("v");const b=document.getElementById("fb-box");let isD=false,sX,sY;v.onwheel=(e)=>{if(this.zoom>1){e.preventDefault();this.z(e.deltaY<0?0.2:-0.2);}};const st=(e)=>{if(this.zoom<=1.01)return;isD=true;const t=e.touches?e.touches[0]:e;sX=t.clientX-this.pX;sY=t.clientY-this.pY;b.style.transition="none";};const mv=(e)=>{if(!isD)return;e.preventDefault();const t=e.touches?e.touches[0]:e;this.pX=t.clientX-sX;this.pY=t.clientY-sY;this.up();};const ed=()=>{isD=false;b.style.transition="transform 0.1s ease-out";};v.addEventListener("mousedown",st);window.addEventListener("mousemove",mv);window.addEventListener("mouseup",ed);v.addEventListener("touchstart",st,{passive:false});v.addEventListener("touchmove",mv,{passive:false});v.addEventListener("touchend",ed);},dbz(e){if(this.zoom>1)this.rs();else{this.zoom=2.5;const r=document.getElementById("v").getBoundingClientRect();this.pX=-(e.clientX-r.left-r.width/2)*1.5;this.pY=-(e.clientY-r.top-r.height/2)*1.5;this.up();}},z(v){this.zoom=Math.min(Math.max(1,this.zoom+v),5);if(this.zoom<=1.01)this.rs();else this.up();},up(){document.getElementById("fb-box").style.transform="translate("+this.pX+"px,"+this.pY+"px) scale("+this.zoom+")";},rs(){this.zoom=1;this.pX=0;this.pY=0;this.up();},af(){this.play=!this.play;document.getElementById("play-btn").innerHTML=this.play?\'<i class="fas fa-pause"><\/i>\':\'<i class="fas fa-play"><\/i>\';if(this.play)this.timer=setInterval(()=>this.n(),4000);else clearInterval(this.timer);},j(v){if(this.flip)this.flip.flip(parseInt(v)-1)},n(){if(this.flip)this.flip.flipNext()},p(){if(this.flip)this.flip.flipPrev()}};if(document.getElementById("d"))app.i();<\/script>';
+        getStandaloneLogic() {
+            return '<script>const app={pdf:null,flip:null,map:[],zoom:1,pX:0,pY:0,play:!1,timer:null,async i(){try{document.getElementById("ld").style.display="flex";const d=document.getElementById("d").innerText;const bin=atob(d);const by=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)by[i]=bin.charCodeAt(i);pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";this.pdf=await pdfjsLib.getDocument({data:by}).promise;await this.bm();this.s();this.it();window.addEventListener("resize",()=>this.s());document.getElementById("ld").style.display="none";}catch(e){alert(e);}},async bm(){for(let i=1;i<=this.pdf.numPages;i++){const pg=await this.pdf.getPage(i);const vp=pg.getViewport({scale:1});if(vp.width>vp.height*1.1){this.map.push({idx:i,t:"L"});this.map.push({idx:i,t:"R"});}else{this.map.push({idx:i,t:"F"});}}},s(){const f=document.getElementById("fb");const vH=window.innerHeight;const vW=window.innerWidth;const isP=vW<vH;let bW,bH;if(isP){bW=vW;bH=bW*1.414;if(bH>vH){bH=vH;bW=bH/1.414;}}else{bH=vH;bW=(bH/1.414)*2;if(bW>vW){bW=vW;bH=(bW/2)*1.414;}}f.style.width=Math.floor(bW)+"px";f.style.height=Math.floor(bH)+"px";const cp=this.flip?this.flip.getCurrentPageIndex():0;f.innerHTML="";this.map.forEach((m,i)=>{const d=document.createElement("div");d.className="pw";d.innerHTML=\'<div id="g-\'+i+\'" style="width:100%;height:100%"><\/div>\';f.appendChild(d);});if(this.flip)this.flip.destroy();this.flip=new St.PageFlip(f,{width:isP?Math.floor(bW):Math.floor(bW/2),height:Math.floor(bH),size:"stretch",showCover:true,usePortrait:isP,startPage:cp});this.flip.loadFromHTML(document.querySelectorAll(".pw"));document.getElementById("sld").max=this.map.length;this.uN(cp);this.flip.on("flip",(e)=>{this.uN(e.data);this.r(e.data);});this.r(cp);},uN(i){document.getElementById("n").innerText=(i+1)+" / "+this.map.length;document.getElementById("sld").value=i+1;},async r(idx){for(let i=idx-1;i<=idx+1;i++){if(i<0||i>=this.map.length)continue;const t=document.getElementById("g-"+i);if(t.hasChildNodes())continue;const m=this.map[i];const p=await this.pdf.getPage(m.idx);const vp=p.getViewport({scale:3});const c=document.createElement("canvas");const ctx=c.getContext("2d");if(m.t==="F"){c.width=vp.width;c.height=vp.height;await p.render({canvasContext:ctx,viewport:vp}).promise;}else{c.width=vp.width/2;c.height=vp.height;const tc=document.createElement("canvas");tc.width=vp.width;tc.height=vp.height;await p.render({canvasContext:tc.getContext("2d"),viewport:vp}).promise;ctx.drawImage(tc,m.t==="L"?0:-vp.width/2,0);}t.appendChild(c);}},it(){const v=document.getElementById("v");const b=document.getElementById("fb-box");let isD=false,sX,sY;v.onwheel=(e)=>{e.preventDefault();this.z(e.deltaY<0?0.2:-0.2);};const st=(e)=>{if(this.zoom<=1.01)return;isD=true;const t=e.touches?e.touches[0]:e;sX=t.clientX-this.pX;sY=t.clientY-this.pY;b.style.transition="none";};const mv=(e)=>{if(!isD)return;e.preventDefault();const t=e.touches?e.touches[0]:e;this.pX=t.clientX-sX;this.pY=t.clientY-sY;this.up();};const ed=()=>{isD=false;b.style.transition="transform 0.1s ease-out";};v.addEventListener("mousedown",st);window.addEventListener("mousemove",mv);window.addEventListener("mouseup",ed);v.addEventListener("touchstart",st,{passive:false});v.addEventListener("touchmove",mv,{passive:false});v.addEventListener("touchend",ed);},dbz(e){if(this.zoom>1)this.rs();else{this.zoom=2.5;const r=document.getElementById("v").getBoundingClientRect();this.pX=-(e.clientX-r.left-r.width/2)*1.5;this.pY=-(e.clientY-r.top-r.height/2)*1.5;this.flip.updateConfig({useMouseEvents:!1});this.up();}},z(v){this.zoom=Math.min(Math.max(1,this.zoom+v),5);if(this.zoom<=1.01)this.rs();else{this.flip.updateConfig({useMouseEvents:!1});this.up();}},up(){document.getElementById("fb-box").style.transform="translate("+this.pX+"px,"+this.pY+"px) scale("+this.zoom+")";},rs(){this.zoom=1;this.pX=0;this.pY=0;this.up();if(this.flip)this.flip.updateConfig({useMouseEvents:!0});},af(){this.play=!this.play;document.getElementById("play-btn").innerHTML=this.play?\'<i class="fas fa-pause"><\/i>\':\'<i class="fas fa-play"><\/i>\';if(this.play)this.timer=setInterval(()=>this.n(),4000);else clearInterval(this.timer);},j(v){this.flip.flip(parseInt(v)-1)},n(){this.flip.flipNext()},p(){this.flip.flipPrev()}};if(document.getElementById("d"))app.i();<\/script>';
         }
     };
     Maker.init();
