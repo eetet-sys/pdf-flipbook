@@ -3,116 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ultimate Flipbook Maker Pro</title>
+    <title>Ultimate Flipbook Pro v100.3</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
     <style>
-        :root { --accent: #00f260; --bg: #0a0a0b; }
-        body { margin: 0; background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
+        :root { --accent: #00f260; --bg: #0a0a0c; --hud: rgba(18, 18, 22, 0.96); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; height: -webkit-fill-available; display: flex; flex-direction: column; touch-action: none; -webkit-user-select: none; user-select: none; }
         
-        /* 메이커 UI (파일 선택 전) */
-        #maker-ui { position: fixed; inset: 0; background: #fff; color: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; padding: 20px; text-align: center; }
-        .drop-zone { border: 3px dashed #ddd; padding: 50px 20px; border-radius: 20px; width: 100%; max-width: 380px; background: #f9fafb; cursor: pointer; transition: 0.3s; }
+        /* Maker UI */
+        #maker-ui { position: fixed; inset: 0; background: #fff; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; padding: 20px; text-align: center; }
+        .drop-zone { border: 3px dashed #cbd5e1; padding: 60px 20px; border-radius: 24px; cursor: pointer; width: 100%; max-width: 420px; background: #f8fafc; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .drop-zone:hover { border-color: var(--accent); background: #f0fff4; }
-        .btn-build { display: none; background: var(--accent); color: #000; padding: 18px 50px; border-radius: 50px; font-weight: 800; cursor: pointer; border: none; font-size: 18px; margin-top: 25px; box-shadow: 0 10px 20px rgba(0,242,96,0.3); }
+        .drop-zone.drag-over { border-color: var(--accent); background: #e6ffed; transform: scale(1.03); }
+        .btn-build { display: none; background: linear-gradient(135deg, #00f260, #05d5ff); color: #000; padding: 18px 60px; border-radius: 50px; font-weight: 800; cursor: pointer; border: none; font-size: 18px; margin-top: 30px; box-shadow: 0 10px 25px rgba(0,242,96,0.4); transition: 0.3s; }
+        .btn-build:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,242,96,0.6); }
 
-        /* 뷰어 영역 (책이 보이는 곳) */
-        #v { flex: 1; display: none; align-items: center; justify-content: center; position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-        #fb-box { transition: transform 0.1s ease-out; display: flex; align-items: center; justify-content: center; will-change: transform; }
-        .pw { background: #fff; box-shadow: 0 0 50px rgba(0,0,0,1); overflow: hidden; }
-        canvas { width: 100% !important; height: 100% !important; display: block; }
+        /* Viewer Area */
+        #v { flex: 1; width: 100vw; display: none; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        #fb-box { transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; will-change: transform; }
+        .pw { background: #fff; box-shadow: 0 0 50px rgba(0,0,0,0.9); overflow: hidden; border-radius: 2px; }
+        canvas { width: 100% !important; height: 100% !important; display: block; image-rendering: -webkit-optimize-contrast; }
 
-        /* 전문가용 부유형 툴바 (Overlay HUD) */
-        #h-ui { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 550px; background: rgba(20,20,25,0.92); backdrop-filter: blur(15px); border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); padding: 12px 20px; z-index: 1000; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
-        .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .btn-icon { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 10px; transition: 0.2s; border-radius: 50%; }
-        .btn-icon:active { color: var(--accent); background: rgba(255,255,255,0.1); }
-        #sld { flex: 1; accent-color: var(--accent); height: 4px; cursor: pointer; }
-        #n { min-width: 65px; text-align: center; font-weight: 800; color: var(--accent); font-size: 13px; font-variant-numeric: tabular-nums; }
-        
-        /* 로딩 화면 */
-        #ld { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9000; }
-        .spin { border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: s 1s linear infinite; margin-bottom: 20px; }
+        /* Floating HUD */
+        #h-ui { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 680px; background: var(--hud); backdrop-filter: blur(25px); border-radius: 25px; border: 1px solid rgba(255,255,255,0.12); padding: 12px 20px; z-index: 1000; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
+        .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .btn-icon { background: transparent; border: none; color: rgba(255,255,255,0.85); font-size: 19px; cursor: pointer; padding: 12px; border-radius: 14px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-icon:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .btn-icon:active { transform: scale(0.9); }
+        .btn-icon.active { color: var(--accent); background: rgba(0,242,96,0.15); }
+        #sld { flex: 1; accent-color: var(--accent); cursor: pointer; height: 5px; appearance: none; background: rgba(255,255,255,0.2); border-radius: 10px; outline: none; }
+        #sld::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,242,96,0.6); }
+        #n { min-width: 75px; text-align: center; font-weight: 800; color: var(--accent); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+        #ld { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(15px); }
+        .spin { border: 5px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; width: 55px; height: 55px; animation: s 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            #h-ui { bottom: 20px; padding: 8px 15px; width: 95%; }
+            .btn-icon { font-size: 17px; padding: 10px; }
+            #n { min-width: 60px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
 
 <div id="maker-ui">
-    <h1 style="margin:0 0 10px 0;">Pro Flipbook Maker</h1>
-    <p style="color:#666; margin-bottom:30px;">404 에러 방지 및 화면 극대화 아키텍처</p>
+    <h1 style="margin: 0 0 10px 0; font-weight: 900;">📖 Flipbook Master</h1>
+    <p style="color: #64748b; margin-bottom: 35px; font-size: 1.1em;">초고속 렌더링 엔진 • v100.3 Pro Edition</p>
     <div class="drop-zone" id="drop-area">
-        <div id="file-name">PDF 파일을 드래그하거나 선택하세요</div>
-        <input type="file" id="pdf-input" accept="application/pdf" style="display:none;">
+        <div style="font-size: 60px; margin-bottom: 20px;">📂</div>
+        <div id="file-name" style="font-size: 16px; color: #1e293b;">PDF 파일을 여기에 놓으세요</div>
     </div>
-    <button class="btn-build" id="build-btn">💾 완벽한 독립 파일 생성</button>
-    <div id="log" style="margin-top:20px; font-size:12px; color:#999;"></div>
+    <input type="file" id="pdf-input" accept="application/pdf" style="display:none;">
+    <button class="btn-build" id="build-btn">💾 평생 소장용 파일 생성하기</button>
 </div>
 
-<div id="ld"><div class="spin"></div>엔진 최적화 로드 중...</div>
-
-<div id="v" ondblclick="app.dbz(event)">
-    <div id="fb-box"><div id="fb"></div></div>
+<div id="ld">
+    <div class="spin"></div>
+    <div id="ld-text" style="margin-top: 25px; font-weight: 700; font-size: 18px; color: #00f260;">엔진 최적화 중...</div>
 </div>
+
+<div id="v"><div id="fb-box"><div id="fb"></div></div></div>
 
 <div id="h-ui">
     <div class="row">
-        <button class="btn-icon" onclick="app.p()"><i class="fas fa-chevron-left"></i></button>
-        <button class="btn-icon" id="play-btn" onclick="app.af()"><i class="fas fa-play"></i></button>
+        <button class="btn-icon" onclick="app.p()" title="이전"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn-icon" id="play-btn" onclick="app.af()" title="자동재생"><i class="fas fa-play"></i></button>
         <input type="range" id="sld" min="1" value="1" oninput="app.j(this.value)">
         <span id="n">1 / -</span>
-        <button class="btn-icon" onclick="app.rs()"><i class="fas fa-compress"></i></button>
-        <button class="btn-icon" onclick="app.n()"><i class="fas fa-chevron-right"></i></button>
+        <button class="btn-icon" id="fs-btn" onclick="app.tfs()" title="전체화면"><i class="fas fa-expand"></i></button>
+        <button class="btn-icon" id="z-btn" onclick="app.tz()" title="확대/축소"><i class="fas fa-search-plus"></i></button>
+        <button class="btn-icon" onclick="app.n()" title="다음"><i class="fas fa-chevron-right"></i></button>
     </div>
 </div>
 
 <script>
-    // 20년 차 개발자의 Maker 로직 (JS 파일 독립성 확보)
-    const Maker = {
-        file: null,
-        init() {
-            const area = document.getElementById('drop-area');
-            const input = document.getElementById('pdf-input');
-            area.onclick = () => input.click();
-            input.onchange = (e) => this.setFile(e.target.files[0]);
-            area.ondragover = (e) => { e.preventDefault(); area.style.borderColor = "#00f260"; };
-            area.ondrop = (e) => { e.preventDefault(); this.setFile(e.dataTransfer.files[0]); };
-            document.getElementById('build-btn').onclick = () => this.build();
-        },
-        setFile(f) {
-            if (!f || f.type !== "application/pdf") return;
-            this.file = f;
-            document.getElementById('file-name').innerText = f.name;
-            document.getElementById('build-btn').style.display = 'block';
-        },
-        async build() {
-            const log = document.getElementById('log');
-            log.innerText = "데이터 인코딩 중...";
+const Maker = {
+    file: null,
+    init() {
+        const area = document.getElementById('drop-area'), input = document.getElementById('pdf-input');
+        area.onclick = () => input.click();
+        input.onchange = (e) => this.setFile(e.target.files[0]);
+        area.ondragover = (e) => { e.preventDefault(); area.classList.add('drag-over'); };
+        area.ondragleave = () => area.classList.remove('drag-over');
+        area.ondrop = (e) => { e.preventDefault(); area.classList.remove('drag-over'); this.setFile(e.dataTransfer.files[0]); };
+        document.getElementById('build-btn').onclick = () => this.build();
+    },
+    setFile(f) {
+        if (!f || f.type !== "application/pdf") return alert("PDF 파일만 업로드 가능합니다.");
+        this.file = f;
+        document.getElementById('file-name').innerHTML = `<strong style="color:#0f172a">${f.name}</strong><br><small style="color:#64748b">${(f.size/1024/1024).toFixed(2)} MB 준비됨</small>`;
+        document.getElementById('build-btn').style.display = 'block';
+    },
+    async build() {
+        try {
+            document.getElementById('ld').style.display = 'flex';
             const buffer = await this.file.arrayBuffer();
             const bytes = new Uint8Array(buffer);
+            // 대용량 대응 초고속 변환 로직
             let binary = "";
-            for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+            const chunkSize = 8192;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+            }
             const b64 = btoa(binary);
-
-            log.innerText = "자기 완결형 파일 조립 중...";
-            // 하단 바 가시성과 책 크기 최적화를 위해 CSS와 ID를 동적으로 교체
             const html = document.documentElement.outerHTML
                 .replace('id="h-ui"', 'id="h-ui" style="display:block;"')
                 .replace('id="v"', 'id="v" style="display:flex;"')
                 .replace('id="maker-ui"', 'id="maker-ui" style="display:none;"')
-                + `<script id="d" type="text/plain">${b64}<\/script>` + this.getStandaloneLogic();
-            
+                + `<script id="d" type="text/plain">${b64}<\/script>` + this.getLogic();
             const blob = new Blob(['<!DOCTYPE html><html>' + html + '<\/html>'], {type: 'text/html'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = this.file.name.replace('.pdf', '') + "_final.html"; a.click();
-            log.innerText = "생성 완료! 파일을 저장하세요.";
-        },
-        getStandaloneLogic() {
-            return '<script>const app={pdf:null,flip:null,map:[],zoom:1,pX:0,pY:0,play:!1,timer:null,async i(){try{document.getElementById("ld").style.display="flex";const d=document.getElementById("d").innerText;const bin=atob(d);const by=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)by[i]=bin.charCodeAt(i);pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";this.pdf=await pdfjsLib.getDocument({data:by}).promise;await this.bm();this.s();this.it();window.addEventListener("resize",()=>this.s());document.getElementById("ld").style.display="none";}catch(e){alert(e);}},async bm(){for(let i=1;i<=this.pdf.numPages;i++){const pg=await this.pdf.getPage(i);const vp=pg.getViewport({scale:1});if(vp.width>vp.height*1.1){this.map.push({idx:i,t:"L"});this.map.push({idx:i,t:"R"});}else{this.map.push({idx:i,t:"F"});}}},s(){const f=document.getElementById("fb");const vH=window.innerHeight;const vW=window.innerWidth;const isP=vW<vH;let bW,bH;if(isP){bW=vW;bH=bW*1.414;if(bH>vH){bH=vH;bW=bH/1.414;}}else{bH=vH;bW=(bH/1.414)*2;if(bW>vW){bW=vW;bH=(bW/2)*1.414;}}f.style.width=Math.floor(bW)+"px";f.style.height=Math.floor(bH)+"px";const cp=this.flip?this.flip.getCurrentPageIndex():0;f.innerHTML="";this.map.forEach((m,i)=>{const d=document.createElement("div");d.className="pw";d.innerHTML=\'<div id="g-\'+i+\'" style="width:100%;height:100%"><\/div>\';f.appendChild(d);});if(this.flip)this.flip.destroy();this.flip=new St.PageFlip(f,{width:isP?Math.floor(bW):Math.floor(bW/2),height:Math.floor(bH),size:"stretch",showCover:true,usePortrait:isP,startPage:cp});this.flip.loadFromHTML(document.querySelectorAll(".pw"));document.getElementById("sld").max=this.map.length;this.uN(cp);this.flip.on("flip",(e)=>{this.uN(e.data);this.r(e.data);});this.r(cp);},uN(i){document.getElementById("n").innerText=(i+1)+" / "+this.map.length;document.getElementById("sld").value=i+1;},async r(idx){for(let i=idx-1;i<=idx+1;i++){if(i<0||i>=this.map.length)continue;const t=document.getElementById("g-"+i);if(t.hasChildNodes())continue;const m=this.map[i];const p=await this.pdf.getPage(m.idx);const vp=p.getViewport({scale:3});const c=document.createElement("canvas");const ctx=c.getContext("2d");if(m.t==="F"){c.width=vp.width;c.height=vp.height;await p.render({canvasContext:ctx,viewport:vp}).promise;}else{c.width=vp.width/2;c.height=vp.height;const tc=document.createElement("canvas");tc.width=vp.width;tc.height=vp.height;await p.render({canvasContext:tc.getContext("2d"),viewport:vp}).promise;ctx.drawImage(tc,m.t==="L"?0:-vp.width/2,0);}t.appendChild(c);}},it(){const v=document.getElementById("v");const b=document.getElementById("fb-box");let isD=false,sX,sY;v.onwheel=(e)=>{e.preventDefault();this.z(e.deltaY<0?0.2:-0.2);};const st=(e)=>{if(this.zoom<=1.01)return;isD=true;const t=e.touches?e.touches[0]:e;sX=t.clientX-this.pX;sY=t.clientY-this.pY;b.style.transition="none";};const mv=(e)=>{if(!isD)return;e.preventDefault();const t=e.touches?e.touches[0]:e;this.pX=t.clientX-sX;this.pY=t.clientY-sY;this.up();};const ed=()=>{isD=false;b.style.transition="transform 0.1s ease-out";};v.addEventListener("mousedown",st);window.addEventListener("mousemove",mv);window.addEventListener("mouseup",ed);v.addEventListener("touchstart",st,{passive:false});v.addEventListener("touchmove",mv,{passive:false});v.addEventListener("touchend",ed);},dbz(e){if(this.zoom>1)this.rs();else{this.zoom=2.5;const r=document.getElementById("v").getBoundingClientRect();this.pX=-(e.clientX-r.left-r.width/2)*1.5;this.pY=-(e.clientY-r.top-r.height/2)*1.5;this.flip.updateConfig({useMouseEvents:!1});this.up();}},z(v){this.zoom=Math.min(Math.max(1,this.zoom+v),5);if(this.zoom<=1.01)this.rs();else{this.flip.updateConfig({useMouseEvents:!1});this.up();}},up(){document.getElementById("fb-box").style.transform="translate("+this.pX+"px,"+this.pY+"px) scale("+this.zoom+")";},rs(){this.zoom=1;this.pX=0;this.pY=0;this.up();if(this.flip)this.flip.updateConfig({useMouseEvents:!0});},af(){this.play=!this.play;document.getElementById("play-btn").innerHTML=this.play?\'<i class="fas fa-pause"><\/i>\':\'<i class="fas fa-play"><\/i>\';if(this.play)this.timer=setInterval(()=>this.n(),4000);else clearInterval(this.timer);},j(v){this.flip.flip(parseInt(v)-1)},n(){this.flip.flipNext()},p(){this.flip.flipPrev()}};if(document.getElementById("d"))app.i();<\/script>';
+            a.download = this.file.name.replace('.pdf', '') + "_v100_final.html"; a.click();
+            document.getElementById('ld').style.display = 'none';
+        } catch(e) {
+            alert('생성 실패: ' + e.message);
+            document.getElementById('ld').style.display = 'none';
         }
-    };
-    Maker.init();
+    },
+    getLogic() {
+        return '<script>' + 
+        'const app={pdf:null,flip:null,map:[],zoom:1,pX:0,pY:0,play:!1,timer:null,cache:new Map(),resizeTimer:null,' +
+        'async i(){try{document.getElementById("ld").style.display="flex";' +
+        'const bin=atob(document.getElementById("d").innerText);const by=new Uint8Array(bin.length);' +
+        'for(let i=0;i<bin.length;i++)by[i]=bin.charCodeAt(i);' +
+        'pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";' +
+        'this.pdf=await pdfjsLib.getDocument({data:by}).promise;await this.bm();this.s();this.it();this.kb();' +
+        'window.addEventListener("resize",()=>{clearTimeout(this.resizeTimer);this.resizeTimer=setTimeout(()=>this.s(),250);});' +
+        'document.addEventListener("fullscreenchange",()=>this.ufs());' +
+        'document.getElementById("ld").style.display="none";}catch(e){alert("오류: "+e.message);}},' +
+        'async bm(){for(let i=1;i<=this.pdf.numPages;i++){const pg=await this.pdf.getPage(i);const vp=pg.getViewport({scale:1});' +
+        'if(vp.width>vp.height*1.15){this.map.push({idx:i,t:"L"});this.map.push({idx:i,t:"R"});}else{this.map.push({idx:i,t:"F"});}}},' +
+        's(){const f=document.getElementById("fb");const vW=window.innerWidth, vH=window.innerHeight, isP=vW<vH;let bW,bH;' +
+        'if(isP){bW=Math.min(vW*0.96,700);bH=bW*1.414;if(bH>vH*0.9){bH=vH*0.9;bW=bH/1.414;}}else{bH=vH*0.93;bW=(bH/1.414)*2;if(bW>vW*0.96){bW=vW*0.96;bH=(bW/2)*1.414;}}' +
+        'f.style.width=Math.floor(bW)+"px";f.style.height=Math.floor(bH)+"px";const cp=this.flip?this.flip.getCurrentPageIndex():0;f.innerHTML="";' +
+        'this.map.forEach((m,i)=>{const d=document.createElement("div");d.className="pw";d.innerHTML=\'<div id="g-\'+i+\'" style="width:100%;height:100%"></div>\';f.appendChild(d);});' +
+        'if(this.flip)this.flip.destroy();' +
+        'this.flip=new St.PageFlip(f,{width:isP?Math.floor(bW):Math.floor(bW/2),height:Math.floor(bH),size:"stretch",showCover:!0,usePortrait:isP,startPage:cp,flippingTime:550,disableFlipByClick:!1});' +
+        'this.flip.loadFromHTML(document.querySelectorAll(".pw"));document.getElementById("sld").max=this.map.length;this.uN(cp);' +
+        'this.flip.on("flip",(e)=>{this.uN(e.data);this.r(e.data);});this.r(cp);},' +
+        'uN(i){document.getElementById("n").innerText=(i+1)+" / "+this.map.length;document.getElementById("sld").value=i+1;' +
+        'if(this.play&&i+1>=this.map.length){this.af();}},' +
+        'async r(idx){const range=3;for(let i=Math.max(0,idx-range);i<=Math.min(this.map.length-1,idx+range);i++){' +
+        'if(this.cache.has(i))continue;const t=document.getElementById("g-"+i);if(!t)continue;' +
+        'const m=this.map[i],p=await this.pdf.getPage(m.idx),vp=p.getViewport({scale:window.devicePixelRatio*1.5});' +
+        'const c=document.createElement("canvas"),ctx=c.getContext("2d",{alpha:!1});' +
+        'if(m.t==="F"){c.width=vp.width;c.height=vp.height;await p.render({canvasContext:ctx,viewport:vp}).promise;}else{' +
+        'c.width=vp.width/2;c.height=vp.height;const tc=document.createElement("canvas");tc.width=vp.width;tc.height=vp.height;' +
+        'await p.render({canvasContext:tc.getContext("2d",{alpha:!1}),viewport:vp}).promise;ctx.drawImage(tc,m.t==="L"?0:-vp.width/2,0);}' +
+        't.appendChild(c);this.cache.set(i,Date.now());' +
+        'if(this.cache.size>18){let oldest=Infinity, targetK=-1;for(let [k,v] of this.cache){if(v<oldest&&Math.abs(k-idx)>range){oldest=v;targetK=k;}}' +
+        'if(targetK!==-1){const el=document.getElementById("g-"+targetK);if(el)el.innerHTML="";this.cache.delete(targetK);}}}},' +
+        'it(){const v=document.getElementById("v"),b=document.getElementById("fb-box");let isD=!1,sX,sY,startDist=0;' +
+        'v.onwheel=(e)=>{if(this.zoom>1.01){e.preventDefault();this.z(e.deltaY<0?0.18:-0.18);}};' +
+        'const st=(e)=>{if(this.zoom<=1.01)return;if(e.touches&&e.touches.length===2){startDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);return;}' +
+        'isD=!0;const t=e.touches?e.touches[0]:e;sX=t.clientX-this.pX;sY=t.clientY-this.pY;b.style.transition="none";};' +
+        'const mv=(e)=>{if(e.touches&&e.touches.length===2){const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);' +
+        'this.z((dist-startDist)/140);startDist=dist;return;}if(!isD)return;e.preventDefault();const t=e.touches?e.touches[0]:e;this.pX=t.clientX-sX;this.pY=t.clientY-sY;this.up();};' +
+        'const ed=()=>{isD=!1;startDist=0;b.style.transition="transform 0.2s cubic-bezier(0.2,0,0.2,1)";};' +
+        'v.addEventListener("mousedown",st);window.addEventListener("mousemove",mv);window.addEventListener("mouseup",ed);' +
+        'v.addEventListener("touchstart",st,{passive:!1});v.addEventListener("touchmove",mv,{passive:!1});v.addEventListener("touchend",ed);' +
+        'v.addEventListener("dblclick",(e)=>{e.preventDefault();this.tz(e);});},' +
+        'kb(){window.addEventListener("keydown",(e)=>{if(e.key==="ArrowRight")this.n();else if(e.key==="ArrowLeft")this.p();' +
+        'else if(e.key===" "){e.preventDefault();this.af();}else if(e.key==="f"||e.key==="F")this.tfs();else if(e.key==="z"||e.key==="Z")this.tz();});},' +
+        'dbz(e){if(this.zoom>1)this.rs();else{this.zoom=2.3;const r=document.getElementById("v").getBoundingClientRect();' +
+        'this.pX=-(e.clientX-r.left-r.width/2)*1.3;this.pY=-(e.clientY-r.top-r.height/2)*1.3;this.up();document.getElementById("z-btn").classList.add("active");}},' +
+        'z(v){this.zoom=Math.min(Math.max(1,this.zoom+v),4.5);const zb=document.getElementById("z-btn");' +
+        'if(this.zoom<=1.01){this.rs();zb.classList.remove("active");}else{this.up();zb.classList.add("active");}},' +
+        'up(){const limX=(this.zoom-1)*window.innerWidth/2,limY=(this.zoom-1)*window.innerHeight/2;' +
+        'this.pX=Math.min(Math.max(this.pX,-limX),limX);this.pY=Math.min(Math.max(this.pY,-limY),limY);' +
+        'document.getElementById("fb-box").style.transform="translate("+this.pX+"px,"+this.pY+"px) scale("+this.zoom+")";},' +
+        'rs(){this.zoom=1;this.pX=0;this.pY=0;this.up();document.getElementById("z-btn").innerHTML=\'<i class="fas fa-search-plus"></i>\';' +
+        'document.getElementById("z-btn").classList.remove("active");},' +
+        'tz(){const zb=document.getElementById("z-btn");if(this.zoom>1){this.rs();}else{this.zoom=2.2;this.up();' +
+        'zb.innerHTML=\'<i class="fas fa-search-minus"></i>\';zb.classList.add("active");}},' +
+        'tfs(){if(!document.fullscreenElement){document.documentElement.requestFullscreen().catch(e=>console.log(e));}else{document.exitFullscreen();}},' +
+        'ufs(){const fb=document.getElementById("fs-btn");if(document.fullscreenElement){fb.innerHTML=\'<i class="fas fa-compress"></i>\';fb.classList.add("active");}' +
+        'else{fb.innerHTML=\'<i class="fas fa-expand"></i>\';fb.classList.remove("active");}},' +
+        'af(){this.play=!this.play;const pb=document.getElementById("play-btn");' +
+        'pb.innerHTML=this.play?\'<i class="fas fa-pause"></i>\':\'<i class="fas fa-play"></i>\';pb.classList.toggle("active",this.play);' +
+        'if(this.play){this.timer=setInterval(()=>{const curr=this.flip.getCurrentPageIndex();if(curr+1>=this.map.length){this.af();}else{this.n();}},4000);}else{clearInterval(this.timer);}},' +
+        'j(v){const val=parseInt(v)-1;if(this.flip&&val>=0&&val<this.map.length)this.flip.flip(val);},' +
+        'n(){if(this.flip)this.flip.flipNext();},' +
+        'p(){if(this.flip)this.flip.flipPrev();}};' +
+        'if(document.getElementById("d"))app.i();' +
+        '<\/script>';
+    }
+};
+Maker.init();
 </script>
 </body>
 </html>
